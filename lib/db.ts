@@ -43,8 +43,9 @@ function pool(): Pool {
   if (!_pool) {
     const cfg: PoolConfig = {
       connectionString: process.env.DATABASE_URL,
-      max: 8,
+      max: 1,
       idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 5_000,
     };
     if (process.env.PG_SSL === 'true') cfg.ssl = { rejectUnauthorized: false };
     _pool = new Pool(cfg);

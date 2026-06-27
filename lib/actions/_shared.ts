@@ -26,8 +26,9 @@ export function pool(): Pool {
   if (!_pool) {
     _pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      max: 4,
+      max: 1,
       idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 5_000,
     });
   }
   return _pool;
