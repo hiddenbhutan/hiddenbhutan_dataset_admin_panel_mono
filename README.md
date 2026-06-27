@@ -13,6 +13,9 @@ pnpm dev
 # or
 bun dev
 ```
+ admin — for user admin@trekbhutan.local at http://localhost:3000/login.
+
+  The login page itself shows the hint at the bottom in dev mode.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
