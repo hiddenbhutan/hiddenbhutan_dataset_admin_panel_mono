@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Star, Pencil, Trash2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Star, Pencil, Trash2, Eye, EyeOff, CheckCircle2, ImageUp } from 'lucide-react';
 import type { MediaItem, MediaLicense } from '@/lib/db';
 import {
-  setMediaPrimaryAction, setMediaStatusAction, deleteMediaAction,
+  setMediaPrimaryAction, setMediaStatusAction, deleteMediaAction, replaceMediaFileAction,
 } from '@/lib/actions/media';
 import type { ContentStatus } from '@/lib/actions/_shared';
 import MediaThumb from '@/app/media/MediaThumb';
@@ -59,6 +59,7 @@ export default function MediaCard({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
   const lic = LICENSE_LABEL[item.license];
   const cs = CONTENT_STATUS[item.content_status] ?? CONTENT_STATUS.draft;
 
@@ -85,6 +86,15 @@ export default function MediaCard({
   function handleDelete() {
     if (!confirm('Delete this image? This cannot be undone.')) return;
     run(() => deleteMediaAction(item.id, item.storage_key, revalidatePaths));
+  }
+
+  function handleReplaceFile(file: File | null) {
+    if (!file) return;
+    const fd = new FormData();
+    fd.set('file', file);
+    fd.set('revalidatePaths', revalidatePaths.join(','));
+    run(() => replaceMediaFileAction(item.id, fd));
+    if (replaceInputRef.current) replaceInputRef.current.value = '';
   }
 
   return (
@@ -122,6 +132,17 @@ export default function MediaCard({
           className="p-1.5 rounded bg-white/90 hover:bg-white text-[#304d3e] disabled:opacity-50">
           <Pencil size={13} />
         </button>
+        {item.kind === 'image' && (
+          <>
+            <input ref={replaceInputRef} type="file" accept="image/*" className="hidden"
+              onChange={e => handleReplaceFile(e.target.files?.[0] ?? null)} />
+            <button type="button" disabled={pending} onClick={() => replaceInputRef.current?.click()}
+              title="Replace image file"
+              className="p-1.5 rounded bg-white/90 hover:bg-white text-[#304d3e] disabled:opacity-50">
+              <ImageUp size={13} />
+            </button>
+          </>
+        )}
         {!item.is_primary && (
           <button type="button" disabled={pending} onClick={handleSetPrimary}
             title="Set as primary (hero) image"

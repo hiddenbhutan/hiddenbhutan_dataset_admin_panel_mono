@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useTransition } from 'react';
+import { useState, useCallback, useMemo, useRef, useTransition } from 'react';
 import type { TrekRoute, Waypoint, NearbyWaypoint, MediaItem } from '@/lib/db';
 import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
@@ -24,7 +24,7 @@ import LineGeomEditor from '@/components/map/LineGeomEditor';
 import type { GeomGeoJSON, MapMarker } from '@/components/map/MapView';
 import { waypointIcon } from '@/components/map/waypointIcon';
 import Link from 'next/link';
-import { ArrowLeft, Globe, FileText, Mountain, Ruler, CheckCircle2, Eye, EyeOff, Plus } from 'lucide-react';
+import { ArrowLeft, Globe, FileText, Mountain, Ruler, CheckCircle2, Eye, EyeOff, Plus, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 // content.trail_* enum value sets, mirroring the deploy scripts.
@@ -161,6 +161,14 @@ export default function RouteDetailClient({
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<ContentStatus>(initialStatus);
   const [pending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState('waypoints');
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const primaryMedia = media.find(m => m.is_primary) ?? media[0] ?? null;
+
+  function jumpToMedia() {
+    setActiveTab('media');
+    tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   /** IDs of nearby waypoints the user has linked since the page loaded — used to
    *  hide them from the nearby list without a refetch. */
@@ -284,7 +292,28 @@ export default function RouteDetailClient({
           <ArrowLeft size={14} /> Routes
         </Link>
         <div className="flex items-end justify-between">
-          <div>
+          <div className="flex items-start gap-4">
+            <button
+              type="button"
+              onClick={jumpToMedia}
+              title={primaryMedia ? 'View / manage images' : 'No images yet — add one in the Media tab'}
+              className="relative w-20 h-20 rounded-xl overflow-hidden border border-outline-variant shrink-0 hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#f3ede2' }}
+            >
+              {primaryMedia?.cdn_url ? (
+                <img src={primaryMedia.cdn_url} alt={primaryMedia.alt_text ?? ''} className="absolute inset-0 w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ImageIcon size={22} className="text-outline" />
+                </div>
+              )}
+              {media.length > 0 && (
+                <span className="absolute bottom-0.5 right-0.5 px-1 py-px rounded font-bold" style={{ backgroundColor: 'rgba(8,38,25,0.85)', color: '#ffdea3', fontSize: '9px' }}>
+                  {media.length}
+                </span>
+              )}
+            </button>
+            <div>
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <TypeChip val={data.type} />
               <TrailStatusChip val={data.status} />
@@ -315,6 +344,7 @@ export default function RouteDetailClient({
                   </span>
                 </>
               )}
+            </div>
             </div>
           </div>
           <div className="flex gap-2 items-center">
@@ -603,8 +633,8 @@ export default function RouteDetailClient({
       </div>
 
       {/* Bottom tabs */}
-      <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
-        <Tabs defaultValue="waypoints">
+      <Card ref={tabsRef} className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="border-b border-outline-variant bg-transparent rounded-none px-6 pt-1 gap-1 w-full justify-start">
             {[
               { value: 'waypoints', label: `Waypoints (${waypoints.length})` },

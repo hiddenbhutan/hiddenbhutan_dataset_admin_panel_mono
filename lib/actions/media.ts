@@ -40,24 +40,8 @@ export interface UploadResult {
   id?: number;
 }
 
-/**
- * Optimizes an uploaded image (auto-orient, resize to fit MAX_DIMENSION,
- * re-encode as WebP) and inserts a content.media row for it. Runs entirely
- * server-side — the browser never talks to Supabase Storage directly.
- */
-export async function uploadMediaAction(formData: FormData): Promise<UploadResult> {
-  const entityType = formData.get('entityType');
-  const entityIdRaw = formData.get('entityId');
-  const file = formData.get('file');
-  const revalidatePaths = String(formData.get('revalidatePaths') ?? '').split(',').filter(Boolean);
-
-  if (typeof entityType !== 'string' || !ENTITY_TYPES.includes(entityType as MediaEntityType)) {
-    return { ok: false, message: 'Invalid or missing entity type' };
-  }
-  const entityId = Number(entityIdRaw);
-  if (!Number.isFinite(entityId) || entityId <= 0) {
-    return { ok: false, message: 'Invalid or missing entity id' };
-  }
+/** Validates an incoming form file against the shared image-upload constraints. */
+function validateImageFile(file: FormDataEntryValue | null): { ok: true; file: File } | { ok: false; message: string } {
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, message: 'No file selected' };
   }
@@ -67,30 +51,58 @@ export async function uploadMediaAction(formData: FormData): Promise<UploadResul
   if (file.size > MAX_UPLOAD_BYTES) {
     return { ok: false, message: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB) — max 20MB.` };
   }
+  return { ok: true, file };
+}
+
+/** Auto-orients, resizes to fit MAX_DIMENSION, and re-encodes as WebP. */
+async function optimizeImage(file: File): Promise<{ optimized: Buffer; width: number; height: number; sha256: string }> {
+  const input = Buffer.from(await file.arrayBuffer());
+  const pipeline = sharp(input).rotate().resize({
+    width: MAX_DIMENSION,
+    height: MAX_DIMENSION,
+    fit: 'inside',
+    withoutEnlargement: true,
+  }).webp({ quality: 82 });
+  const optimized = await pipeline.toBuffer();
+  const meta = await sharp(optimized).metadata();
+  const sha256 = createHash('sha256').update(optimized).digest('hex');
+  return { optimized, width: meta.width ?? 0, height: meta.height ?? 0, sha256 };
+}
+
+/**
+ * Optimizes an uploaded image (auto-orient, resize to fit MAX_DIMENSION,
+ * re-encode as WebP) and inserts a content.media row for it. Runs entirely
+ * server-side — the browser never talks to Supabase Storage directly.
+ */
+export async function uploadMediaAction(formData: FormData): Promise<UploadResult> {
+  const entityType = formData.get('entityType');
+  const entityIdRaw = formData.get('entityId');
+  const revalidatePaths = String(formData.get('revalidatePaths') ?? '').split(',').filter(Boolean);
+
+  if (typeof entityType !== 'string' || !ENTITY_TYPES.includes(entityType as MediaEntityType)) {
+    return { ok: false, message: 'Invalid or missing entity type' };
+  }
+  const entityId = Number(entityIdRaw);
+  if (!Number.isFinite(entityId) || entityId <= 0) {
+    return { ok: false, message: 'Invalid or missing entity id' };
+  }
+  const validated = validateImageFile(formData.get('file'));
+  if (!validated.ok) return { ok: false, message: validated.message };
+  const file = validated.file;
 
   const user = await getCurrentAdminUser();
 
   let optimized: Buffer;
   let width: number;
   let height: number;
+  let sha256: string;
   try {
-    const input = Buffer.from(await file.arrayBuffer());
-    const pipeline = sharp(input).rotate().resize({
-      width: MAX_DIMENSION,
-      height: MAX_DIMENSION,
-      fit: 'inside',
-      withoutEnlargement: true,
-    }).webp({ quality: 82 });
-    optimized = await pipeline.toBuffer();
-    const meta = await sharp(optimized).metadata();
-    width = meta.width ?? 0;
-    height = meta.height ?? 0;
+    ({ optimized, width, height, sha256 } = await optimizeImage(file));
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { ok: false, message: `Image processing failed: ${msg}` };
   }
 
-  const sha256 = createHash('sha256').update(optimized).digest('hex');
   const storageKey = `${entityType}/${entityId}/${randomUUID()}.webp`;
 
   let cdnUrl: string;
@@ -132,6 +144,70 @@ export async function uploadMediaAction(formData: FormData): Promise<UploadResul
   } catch (e) {
     // Best-effort cleanup so a failed insert doesn't leave an orphaned object.
     await deleteFromStorage(storageKey);
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, message: `Save failed: ${msg}` };
+  }
+}
+
+/**
+ * Replaces the image file behind an existing content.media row — re-runs the
+ * same sharp optimization pipeline and overwrites the existing storage
+ * object in place, so storage_key/cdn_url (and any external references)
+ * stay unchanged. Only usable on kind='image' rows.
+ */
+export async function replaceMediaFileAction(id: number, formData: FormData): Promise<UploadResult> {
+  if (!Number.isFinite(id) || id <= 0) return { ok: false, message: 'Invalid id' };
+  const validated = validateImageFile(formData.get('file'));
+  if (!validated.ok) return { ok: false, message: validated.message };
+  const file = validated.file;
+  const revalidatePaths = String(formData.get('revalidatePaths') ?? '').split(',').filter(Boolean);
+
+  const user = await getCurrentAdminUser();
+
+  const existing = await pool().query<{ storage_key: string; kind: string }>(
+    `SELECT storage_key, kind::text AS kind FROM content.media WHERE id = $1`,
+    [id],
+  );
+  const row = existing.rows[0];
+  if (!row) return { ok: false, message: 'Media row not found' };
+  if (row.kind !== 'image') return { ok: false, message: `Cannot replace a ${row.kind} file this way` };
+
+  let optimized: Buffer;
+  let width: number;
+  let height: number;
+  let sha256: string;
+  try {
+    ({ optimized, width, height, sha256 } = await optimizeImage(file));
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, message: `Image processing failed: ${msg}` };
+  }
+
+  let cdnUrl: string;
+  try {
+    ({ cdnUrl } = await uploadToStorage(row.storage_key, optimized, 'image/webp'));
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, message: `Upload failed: ${msg}` };
+  }
+  // storage_key (and thus the base cdn_url) is unchanged on a replace, so
+  // append a content-hash query param to bust any browser/CDN image cache.
+  cdnUrl = `${cdnUrl}?v=${sha256.slice(0, 12)}`;
+
+  try {
+    const r = await pool().query<{ id: number }>(
+      `UPDATE content.media
+          SET cdn_url = $2, mime_type = 'image/webp', byte_size = $3,
+              width_px = $4, height_px = $5, sha256 = $6,
+              updated_at = now(), updated_by = $7
+        WHERE id = $1
+        RETURNING id`,
+      [id, cdnUrl, optimized.byteLength, width, height, sha256, user.id],
+    );
+    if (!r.rows[0]) return { ok: false, message: 'Update returned no row' };
+    revalidatePaths.forEach((p) => revalidatePath(p));
+    return { ok: true, id };
+  } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { ok: false, message: `Save failed: ${msg}` };
   }
