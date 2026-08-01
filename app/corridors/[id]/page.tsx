@@ -5,6 +5,7 @@ import {
   getCorridorLinksFor,
   getIncomingCorridorLinks,
   getGeomById,
+  getMediaForEntity,
 } from '@/lib/db';
 import ConservationAreaDetailClient from '@/components/ConservationAreaDetailClient';
 
@@ -14,11 +15,12 @@ export default async function CorridorDetailPage({ params }: { params: Promise<{
   if (isNaN(id)) notFound();
   const area = await getConservationAreaById(id);
   if (!area) notFound();
-  const [zones, outgoing, incoming, geom] = await Promise.all([
+  const [zones, outgoing, incoming, geom, media] = await Promise.all([
     getManagementZones(id),
     getCorridorLinksFor(id),
     getIncomingCorridorLinks(id),
     getGeomById('conservation_area', id),
+    getMediaForEntity('biological_corridor', id),
   ]);
   return (
     <ConservationAreaDetailClient
@@ -29,6 +31,8 @@ export default async function CorridorDetailPage({ params }: { params: Promise<{
       backHref="/corridors"
       backLabel="Biological Corridors"
       initialGeom={geom}
+      entityType="biological_corridor"
+      media={media}
     />
   );
 }

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getCulturalCustomById } from '@/lib/db';
+import { getCulturalCustomById, getMediaForEntity } from '@/lib/db';
 import CustomDetailClient from './CustomDetailClient';
 
 export default async function CustomDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,5 +8,6 @@ export default async function CustomDetailPage({ params }: { params: Promise<{ i
   if (isNaN(id)) notFound();
   const custom = await getCulturalCustomById(id);
   if (!custom) notFound();
-  return <CustomDetailClient custom={custom} />;
+  const media = await getMediaForEntity('cultural_custom', id);
+  return <CustomDetailClient custom={custom} media={media} />;
 }

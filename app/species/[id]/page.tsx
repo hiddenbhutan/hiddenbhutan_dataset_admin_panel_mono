@@ -6,6 +6,7 @@ import {
   getSpeciesOccurrences,
   getSpeciesSightingPoints,
   getRefConservationStatus,
+  getMediaForEntity,
 } from '@/lib/db';
 import SpeciesDetailClient from '@/components/SpeciesDetailClient';
 
@@ -15,12 +16,13 @@ export default async function SpeciesDetailPage({ params }: { params: Promise<{ 
   if (isNaN(id)) notFound();
   const species = await getSpeciesById(id);
   if (!species) notFound();
-  const [aliases, locations, occurrences, sightingPoints, conservationStatuses] = await Promise.all([
+  const [aliases, locations, occurrences, sightingPoints, conservationStatuses, media] = await Promise.all([
     getSpeciesAliases(id),
     getSpeciesLocations(id),
     getSpeciesOccurrences(id, 20),
     getSpeciesSightingPoints(id),
     getRefConservationStatus(),
+    getMediaForEntity('species', id),
   ]);
   return (
     <SpeciesDetailClient
@@ -30,6 +32,7 @@ export default async function SpeciesDetailPage({ params }: { params: Promise<{ 
       occurrences={occurrences}
       sightingPoints={sightingPoints}
       conservationStatuses={conservationStatuses}
+      media={media}
       backHref="/species"
       backLabel="Species"
       showBirdFields={species.class === 'Aves'}

@@ -58,6 +58,8 @@ const ENTITY_HREF: Partial<Record<MediaEntityType, string>> = {
   historical_figure: '/historical-figures',
   thangka:           '/thangkas',
   cuisine_ingredient:'/cuisine-ingredients',
+  school:            '/schools',
+  locality:          '/villages',
 };
 
 function formatBytes(n: number): string {

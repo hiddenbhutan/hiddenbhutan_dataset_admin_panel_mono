@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getZorigChusumById } from '@/lib/db';
+import { getZorigChusumById, getMediaForEntity } from '@/lib/db';
 import CraftDetailClient from './CraftDetailClient';
 
 export default async function CraftDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,5 +8,6 @@ export default async function CraftDetailPage({ params }: { params: Promise<{ id
   if (isNaN(id)) notFound();
   const craft = await getZorigChusumById(id);
   if (!craft) notFound();
-  return <CraftDetailClient craft={craft} />;
+  const media = await getMediaForEntity('zorig_chusum', id);
+  return <CraftDetailClient craft={craft} media={media} />;
 }

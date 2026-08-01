@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { TraditionalGame } from '@/lib/db';
+import type { TraditionalGame, MediaItem } from '@/lib/db';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import { updateTraditionalGame, setTraditionalGameStatus, deleteTraditionalGame } from '@/lib/actions/traditional-games';
 import {
   StatusBadge,
@@ -16,7 +17,7 @@ import {
   type ContentStatus,
 } from '@/components/ContentStatusControls';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -50,7 +51,7 @@ function parseRange(range: string | null): { min: number | null; max: number | n
   };
 }
 
-export default function GameDetailClient({ game }: { game: TraditionalGame }) {
+export default function GameDetailClient({ game, media }: { game: TraditionalGame; media: MediaItem[] }) {
   const initialPlayers = parseRange(game.typical_players);
 
   const [data, setData] = useState({ ...game });
@@ -212,6 +213,20 @@ export default function GameDetailClient({ game }: { game: TraditionalGame }) {
         </div>
 
         <div className="col-span-4 space-y-4">
+          <Card className="border-[#c2c8c2] bg-white">
+            <CardHeader>
+              <CardTitle className="text-[#1d1c15]" style={{ fontSize: '16px' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="traditional_game"
+                entityId={game.id}
+                items={media}
+                revalidatePaths={[`/traditional-games/${game.id}`, '/media']}
+              />
+            </CardContent>
+          </Card>
+
           <Card className="border-[#c2c8c2] bg-white">
             <CardContent className="p-5 space-y-4">
               <S title="Play" />

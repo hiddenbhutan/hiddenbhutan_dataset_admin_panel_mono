@@ -17,9 +17,11 @@ import type {
   SpeciesAbundance,
   SpeciesKingdom,
   RefConservationStatus,
+  MediaItem,
 } from '@/lib/db';
 import { updateSpecies, setSpeciesStatus, deleteSpecies } from '@/lib/actions/species';
 import SightingsMap from '@/components/map/SightingsMap';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
   StatusBadge,
   StatusActions,
@@ -155,6 +157,7 @@ export default function SpeciesDetailClient({
   occurrences,
   sightingPoints,
   conservationStatuses,
+  media,
   backHref,
   backLabel,
   /** Show bird-specific narrative fields (vocal_notes, plumage). Default: infer from class='Aves'. */
@@ -166,6 +169,7 @@ export default function SpeciesDetailClient({
   occurrences: SpeciesOccurrenceRow[];
   sightingPoints: SpeciesSightingPoint[];
   conservationStatuses: RefConservationStatus[];
+  media: MediaItem[];
   backHref: string;
   backLabel: string;
   showBirdFields?: boolean;
@@ -519,6 +523,21 @@ export default function SpeciesDetailClient({
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Media */}
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-on-surface" style={{ fontSize: '16px' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="species"
+                entityId={species.id}
+                items={media}
+                revalidatePaths={[`/species/${species.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

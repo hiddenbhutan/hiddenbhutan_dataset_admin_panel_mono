@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import {
   getThangkaById, getThangkaFestivalDisplays,
   getHistoricalFigureOptions, getDzongOptions, getHeritageSiteOptions,
+  getMediaForEntity,
 } from '@/lib/db';
 import ThangkaDetailClient from './ThangkaDetailClient';
 
@@ -11,11 +12,12 @@ export default async function ThangkaDetailPage({ params }: { params: Promise<{ 
   if (isNaN(id)) notFound();
   const thangka = await getThangkaById(id);
   if (!thangka) notFound();
-  const [figures, dzongs, heritageSites, festivalDisplays] = await Promise.all([
+  const [figures, dzongs, heritageSites, festivalDisplays, media] = await Promise.all([
     getHistoricalFigureOptions(),
     getDzongOptions(),
     getHeritageSiteOptions(),
     getThangkaFestivalDisplays(id),
+    getMediaForEntity('thangka', id),
   ]);
   return (
     <ThangkaDetailClient
@@ -24,6 +26,7 @@ export default async function ThangkaDetailPage({ params }: { params: Promise<{ 
       dzongs={dzongs}
       heritageSites={heritageSites}
       festivalDisplays={festivalDisplays}
+      media={media}
     />
   );
 }

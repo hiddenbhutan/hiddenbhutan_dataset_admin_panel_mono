@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { ZorigChusum } from '@/lib/db';
+import type { ZorigChusum, MediaItem } from '@/lib/db';
 import { updateZorigChusum, setZorigChusumStatus, deleteZorigChusum } from '@/lib/actions/zorig-chusum';
 import {
   StatusBadge,
@@ -15,6 +15,7 @@ import {
   FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,7 @@ function S({ title }: { title: string }) {
   );
 }
 
-export default function CraftDetailClient({ craft }: { craft: ZorigChusum }) {
+export default function CraftDetailClient({ craft, media }: { craft: ZorigChusum; media: MediaItem[] }) {
   const [data, setData] = useState({ ...craft });
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<ContentStatus>(craft.content_status);
@@ -211,6 +212,18 @@ export default function CraftDetailClient({ craft }: { craft: ZorigChusum }) {
           </Card>
         </div>
       </div>
+
+      <Card className="border-[#c2c8c2] bg-white">
+        <CardContent className="p-5">
+          <S title="Media" />
+          <EntityMediaPanel
+            entityType="zorig_chusum"
+            entityId={craft.id}
+            items={media}
+            revalidatePaths={[`/zorig-chusum/${craft.id}`, '/media']}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

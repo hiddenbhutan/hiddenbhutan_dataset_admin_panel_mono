@@ -13,8 +13,10 @@ import type {
   CuisineLocationRole,
   SpiceLevel,
   RefOption,
+  MediaItem,
 } from '@/lib/db';
 import { updateCuisineItem, setCuisineItemStatus, deleteCuisineItem } from '@/lib/actions/cuisine';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
   StatusBadge,
   StatusActions,
@@ -76,12 +78,14 @@ export default function FoodDetailClient({
   ingredients,
   locations,
   dzongkhags,
+  media,
 }: {
   item: CuisineItem;
   categories: CuisineCategory[];
   ingredients: CuisineItemIngredient[];
   locations: CuisineItemLocation[];
   dzongkhags: RefOption[];
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...item });
   const [dirty, setDirty] = useState(false);
@@ -378,6 +382,20 @@ export default function FoodDetailClient({
                   })}
                 </ul>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-on-surface" style={{ fontSize: '16px' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="cuisine_item"
+                entityId={item.id}
+                items={media}
+                revalidatePaths={[`/food/${item.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

@@ -5,18 +5,19 @@ import Link from 'next/link';
 import { ArrowLeft, Stethoscope, Plane, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { HealthCenterFull, RefOption, RefHealthCenterType } from '@/lib/db';
+import type { HealthCenterFull, RefOption, RefHealthCenterType, MediaItem } from '@/lib/db';
 import {
   updateHealthCenter, setHealthCenterStatus, deleteHealthCenter,
 } from '@/lib/actions/health-centers';
 import PointGeomEditor from '@/components/map/PointGeomEditor';
 import type { GeomGeoJSON } from '@/components/map/MapView';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -51,8 +52,8 @@ function S({ title }: { title: string }) {
 }
 
 export default function HealthCenterDetailClient({
-  hc, districts, types, initialGeom,
-}: { hc: HealthCenterFull; districts: RefOption[]; types: RefHealthCenterType[]; initialGeom: GeomGeoJSON | null }) {
+  hc, districts, types, initialGeom, media,
+}: { hc: HealthCenterFull; districts: RefOption[]; types: RefHealthCenterType[]; initialGeom: GeomGeoJSON | null; media: MediaItem[] }) {
   const [data, setData] = useState({ ...hc });
   const selectedType = types.find(t => t.id === data.type_id);
   const [dirty, setDirty] = useState(false);
@@ -301,6 +302,20 @@ export default function HealthCenterDetailClient({
                   </SelectContent>
                 </Select>
               </F>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="health_center"
+                entityId={hc.id}
+                items={media}
+                revalidatePaths={[`/health-centers/${hc.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

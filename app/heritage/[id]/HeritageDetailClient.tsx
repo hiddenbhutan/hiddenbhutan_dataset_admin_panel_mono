@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { ArrowLeft, Mountain } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { HeritageSite, RefOption, HeritageFee, HeritageOpeningHours } from '@/lib/db';
+import type { HeritageSite, RefOption, HeritageFee, HeritageOpeningHours, MediaItem } from '@/lib/db';
 import { updateHeritageSite, setHeritageSiteStatus, deleteHeritageSite } from '@/lib/actions/heritage-sites';
 import PointGeomEditor from '@/components/map/PointGeomEditor';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import type { GeomGeoJSON } from '@/components/map/MapView';
 import {
   StatusBadge,
@@ -80,6 +81,7 @@ export default function HeritageDetailClient({
   figures,
   trekRoutes,
   initialGeom,
+  media,
 }: {
   site: HeritageSite;
   heritageTypes: RefOption[];
@@ -87,6 +89,7 @@ export default function HeritageDetailClient({
   figures: RefOption[];
   trekRoutes: RefOption[];
   initialGeom: GeomGeoJSON | null;
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...site });
   const [dirty, setDirty] = useState(false);
@@ -432,6 +435,20 @@ export default function HeritageDetailClient({
           </Card>
         </div>
       </div>
+
+      <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EntityMediaPanel
+            entityType="heritage_site"
+            entityId={site.id}
+            items={media}
+            revalidatePaths={[`/heritage/${site.id}`, '/media']}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

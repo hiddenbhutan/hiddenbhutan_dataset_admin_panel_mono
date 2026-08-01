@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { Thangka, ThangkaStyle, ThangkaFestivalDisplay, RefOption } from '@/lib/db';
+import type { Thangka, ThangkaStyle, ThangkaFestivalDisplay, RefOption, MediaItem } from '@/lib/db';
 import { updateThangka, setThangkaStatus, deleteThangka } from '@/lib/actions/thangkas';
 import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -51,13 +52,14 @@ function S({ title }: { title: string }) {
 }
 
 export default function ThangkaDetailClient({
-  thangka, figures, dzongs, heritageSites, festivalDisplays,
+  thangka, figures, dzongs, heritageSites, festivalDisplays, media,
 }: {
   thangka: Thangka;
   figures: RefOption[];
   dzongs: RefOption[];
   heritageSites: RefOption[];
   festivalDisplays: ThangkaFestivalDisplay[];
+  media: MediaItem[];
 }) {
   const initialOrigin: OriginMode =
     thangka.origin_dzong_id ? 'dzong'
@@ -402,6 +404,20 @@ export default function ThangkaDetailClient({
           </Card>
         </div>
       </div>
+
+      <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EntityMediaPanel
+            entityType="thangka"
+            entityId={thangka.id}
+            items={media}
+            revalidatePaths={[`/thangkas/${thangka.id}`, '/media']}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -12,10 +12,13 @@ import type {
   PaType,
   IucnCategory,
   ManagementZoneKind,
+  MediaEntityType,
+  MediaItem,
 } from '@/lib/db';
 import { updateConservationArea, setConservationAreaStatus, deleteConservationArea } from '@/lib/actions/conservation-areas';
 import PolygonGeomEditor from '@/components/map/PolygonGeomEditor';
 import type { GeomGeoJSON } from '@/components/map/MapView';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
   StatusBadge,
   StatusActions,
@@ -109,6 +112,8 @@ export default function ConservationAreaDetailClient({
   backHref,
   backLabel,
   initialGeom,
+  entityType,
+  media,
 }: {
   area: ConservationAreaRow;
   outgoingLinks: CorridorLinkRow[];   // populated when area is a corridor
@@ -117,6 +122,8 @@ export default function ConservationAreaDetailClient({
   backHref: string;
   backLabel: string;
   initialGeom: GeomGeoJSON | null;
+  entityType: MediaEntityType;
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...area });
   const [dirty, setDirty] = useState(false);
@@ -487,6 +494,20 @@ export default function ConservationAreaDetailClient({
                   Geodesic (loader-computed) area: {(data.area_m2 / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} km² · read-only
                 </p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType={entityType}
+                entityId={data.id}
+                items={media}
+                revalidatePaths={[`${backHref}/${data.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

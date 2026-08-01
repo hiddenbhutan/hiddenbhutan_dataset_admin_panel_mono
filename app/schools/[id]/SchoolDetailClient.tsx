@@ -5,18 +5,19 @@ import Link from 'next/link';
 import { ArrowLeft, GraduationCap, Home } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { SchoolFull, RefOption, RefSchoolCategory } from '@/lib/db';
+import type { SchoolFull, RefOption, RefSchoolCategory, MediaItem } from '@/lib/db';
 import {
   updateSchool, setSchoolStatus, deleteSchool,
 } from '@/lib/actions/schools';
 import PointGeomEditor from '@/components/map/PointGeomEditor';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import type { GeomGeoJSON } from '@/components/map/MapView';
 import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -44,8 +45,8 @@ function S({ title }: { title: string }) {
 }
 
 export default function SchoolDetailClient({
-  school, districts, categories, initialGeom,
-}: { school: SchoolFull; districts: RefOption[]; categories: RefSchoolCategory[]; initialGeom: GeomGeoJSON | null }) {
+  school, districts, categories, initialGeom, media,
+}: { school: SchoolFull; districts: RefOption[]; categories: RefSchoolCategory[]; initialGeom: GeomGeoJSON | null; media: MediaItem[] }) {
   const categoryLabel = (id: number | null) =>
     id == null ? null : categories.find(c => c.id === id)?.label_en ?? null;
   const [data, setData] = useState({ ...school });
@@ -256,6 +257,20 @@ export default function SchoolDetailClient({
                   </SelectContent>
                 </Select>
               </F>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-on-surface" style={{ fontSize: '16px' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="school"
+                entityId={school.id}
+                items={media}
+                revalidatePaths={[`/schools/${school.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

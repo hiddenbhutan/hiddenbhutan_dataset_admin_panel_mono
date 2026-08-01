@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, Leaf, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { CuisineIngredientFull, CuisineIngredientDish, RefOption } from '@/lib/db';
+import type { CuisineIngredientFull, CuisineIngredientDish, RefOption, MediaItem } from '@/lib/db';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import { updateCuisineIngredient, setCuisineIngredientStatus, deleteCuisineIngredient } from '@/lib/actions/cuisine-ingredients';
 import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
@@ -39,11 +40,12 @@ function S({ title }: { title: string }) {
 }
 
 export default function IngredientDetailClient({
-  ingredient, species, dishes,
+  ingredient, species, dishes, media,
 }: {
   ingredient: CuisineIngredientFull;
   species: RefOption[];
   dishes: CuisineIngredientDish[];
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...ingredient });
   const [dirty, setDirty] = useState(false);
@@ -261,6 +263,18 @@ export default function IngredientDetailClient({
                   View species record →
                 </Link>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardContent className="p-5 space-y-4">
+              <S title="Media" />
+              <EntityMediaPanel
+                entityType="cuisine_ingredient"
+                entityId={ingredient.id}
+                items={media}
+                revalidatePaths={[`/cuisine-ingredients/${ingredient.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

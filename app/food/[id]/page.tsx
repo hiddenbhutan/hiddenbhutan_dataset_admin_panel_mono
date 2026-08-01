@@ -5,6 +5,7 @@ import {
   getCuisineItemIngredients,
   getCuisineItemLocations,
   getDzongkhags,
+  getMediaForEntity,
 } from '@/lib/db';
 import FoodDetailClient from './FoodDetailClient';
 
@@ -14,11 +15,12 @@ export default async function FoodDetailPage({ params }: { params: Promise<{ id:
   if (isNaN(id)) notFound();
   const item = await getCuisineItemById(id);
   if (!item) notFound();
-  const [categories, ingredients, locations, dzongkhags] = await Promise.all([
+  const [categories, ingredients, locations, dzongkhags, media] = await Promise.all([
     getCuisineCategoryOptions(),
     getCuisineItemIngredients(id),
     getCuisineItemLocations(id),
     getDzongkhags(),
+    getMediaForEntity('cuisine_item', id),
   ]);
   return (
     <FoodDetailClient
@@ -27,6 +29,7 @@ export default async function FoodDetailPage({ params }: { params: Promise<{ id:
       ingredients={ingredients}
       locations={locations}
       dzongkhags={dzongkhags.map(d => ({ id: d.id, code: null, label: d.name }))}
+      media={media}
     />
   );
 }

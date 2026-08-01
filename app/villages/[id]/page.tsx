@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getLocalityById, getDzongkhagOptions, getGeomById } from '@/lib/db';
+import { getLocalityById, getDzongkhagOptions, getGeomById, getMediaForEntity } from '@/lib/db';
 import LocalityDetailClient from '@/components/LocalityDetailClient';
 
 export default async function VillageDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,10 +8,11 @@ export default async function VillageDetailPage({ params }: { params: Promise<{ 
   if (isNaN(id)) notFound();
   const locality = await getLocalityById(id);
   if (!locality) notFound();
-  const [districts, geom] = await Promise.all([
+  const [districts, geom, media] = await Promise.all([
     getDzongkhagOptions(),
     getGeomById('locality', id),
+    getMediaForEntity('locality', id),
   ]);
   return <LocalityDetailClient locality={locality} districts={districts}
-    backHref="/villages" backLabel="Villages" initialGeom={geom} />;
+    backHref="/villages" backLabel="Villages" initialGeom={geom} media={media} />;
 }

@@ -4,6 +4,7 @@ import {
   getHistoricalPeriodOptions,
   getHistoricalFigureOptions,
   getGeomById,
+  getMediaForEntity,
 } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import DzongDetailClient from './DzongDetailClient';
@@ -16,11 +17,12 @@ export default async function DzongDetailPage({
   if (isNaN(id)) notFound();
   const dzong = await getDzongById(id);
   if (!dzong) notFound();
-  const [lhakhangs, periods, figures, geom] = await Promise.all([
+  const [lhakhangs, periods, figures, geom, media] = await Promise.all([
     getDzongLhakhangs(id),
     getHistoricalPeriodOptions(),
     getHistoricalFigureOptions(),
     getGeomById('dzong', id),
+    getMediaForEntity('dzong', id),
   ]);
   return (
     <DzongDetailClient
@@ -29,6 +31,7 @@ export default async function DzongDetailPage({
       periods={periods}
       figures={figures}
       initialGeom={geom}
+      media={media}
     />
   );
 }

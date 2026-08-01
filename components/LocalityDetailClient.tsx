@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { LocalityFull, RefOption } from '@/lib/db';
+import type { LocalityFull, RefOption, MediaItem } from '@/lib/db';
 import {
   updateLocality, setLocalityStatus, deleteLocality,
 } from '@/lib/actions/villages';
 import PointGeomEditor from '@/components/map/PointGeomEditor';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import type { GeomGeoJSON } from '@/components/map/MapView';
 import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
@@ -93,13 +94,14 @@ function TriBoolSelect({ value, onChange }: { value: boolean | null; onChange: (
 }
 
 export default function LocalityDetailClient({
-  locality, districts, backHref, backLabel, initialGeom,
+  locality, districts, backHref, backLabel, initialGeom, media,
 }: {
   locality: LocalityFull;
   districts: RefOption[];
   backHref: string;
   backLabel: string;
   initialGeom: GeomGeoJSON | null;
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...locality });
   const [dirty, setDirty] = useState(false);
@@ -364,6 +366,14 @@ export default function LocalityDetailClient({
           )}
         </div>
       </div>
+
+      <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+        <CardContent className="p-5">
+          <S title="Media" />
+          <EntityMediaPanel entityType="locality" entityId={locality.id} items={media}
+            revalidatePaths={[`/villages/${locality.id}`, '/media']} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

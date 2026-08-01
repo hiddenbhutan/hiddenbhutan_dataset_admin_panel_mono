@@ -5,18 +5,19 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { WaypointFull, RefWaypointType, RefOption } from '@/lib/db';
+import type { WaypointFull, RefWaypointType, RefOption, MediaItem } from '@/lib/db';
 import {
   updateWaypoint, setWaypointStatus, deleteWaypoint,
 } from '@/lib/actions/waypoints';
 import PointGeomEditor from '@/components/map/PointGeomEditor';
 import type { GeomGeoJSON } from '@/components/map/MapView';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -43,12 +44,13 @@ function S({ title }: { title: string }) {
 }
 
 export default function WaypointDetailClient({
-  waypoint, types, districts, initialGeom,
+  waypoint, types, districts, initialGeom, media,
 }: {
   waypoint: WaypointFull;
   types: RefWaypointType[];
   districts: RefOption[];
   initialGeom: GeomGeoJSON | null;
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...waypoint });
   const [dirty, setDirty] = useState(false);
@@ -204,6 +206,20 @@ export default function WaypointDetailClient({
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-on-surface" style={{ fontSize: '16px' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="waypoint"
+                entityId={waypoint.id}
+                items={media}
+                revalidatePaths={[`/waypoints/${waypoint.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import {
-  getCuisineIngredientById, getCuisineIngredientDishes, getSpeciesOptions,
+  getCuisineIngredientById, getCuisineIngredientDishes, getSpeciesOptions, getMediaForEntity,
 } from '@/lib/db';
 import IngredientDetailClient from './IngredientDetailClient';
 
@@ -12,9 +12,10 @@ export default async function CuisineIngredientDetailPage({
   if (isNaN(id)) notFound();
   const ingredient = await getCuisineIngredientById(id);
   if (!ingredient) notFound();
-  const [species, dishes] = await Promise.all([
+  const [species, dishes, media] = await Promise.all([
     getSpeciesOptions(),
     getCuisineIngredientDishes(id),
+    getMediaForEntity('cuisine_ingredient', id),
   ]);
-  return <IngredientDetailClient ingredient={ingredient} species={species} dishes={dishes} />;
+  return <IngredientDetailClient ingredient={ingredient} species={species} dishes={dishes} media={media} />;
 }

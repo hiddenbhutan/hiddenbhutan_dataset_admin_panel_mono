@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { CulturalCustom, CulturalCustomCategory, CulturalSeverity } from '@/lib/db';
+import type { CulturalCustom, CulturalCustomCategory, CulturalSeverity, MediaItem } from '@/lib/db';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import { updateCulturalCustom, setCulturalCustomStatus, deleteCulturalCustom } from '@/lib/actions/cultural-customs';
 import {
   StatusBadge,
@@ -60,7 +61,7 @@ function S({ title }: { title: string }) {
   );
 }
 
-export default function CustomDetailClient({ custom }: { custom: CulturalCustom }) {
+export default function CustomDetailClient({ custom, media }: { custom: CulturalCustom; media: MediaItem[] }) {
   const [data, setData] = useState({ ...custom });
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<ContentStatus>(custom.content_status);
@@ -226,6 +227,18 @@ export default function CustomDetailClient({ custom }: { custom: CulturalCustom 
                 onChange={v => update('applies_in_contexts', v.length ? v : null)}
                 placeholder="Add context…"
                 tagStyle="gold"
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="border-[#c2c8c2] bg-white">
+            <CardContent className="p-5">
+              <S title="Media" />
+              <EntityMediaPanel
+                entityType="cultural_custom"
+                entityId={custom.id}
+                items={media}
+                revalidatePaths={[`/cultural-customs/${custom.id}`, '/media']}
               />
             </CardContent>
           </Card>

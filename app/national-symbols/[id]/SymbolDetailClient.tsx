@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { NationalSymbol, NationalSymbolKind, RefOption } from '@/lib/db';
+import type { NationalSymbol, NationalSymbolKind, RefOption, MediaItem } from '@/lib/db';
 import { updateNationalSymbol, setNationalSymbolStatus, deleteNationalSymbol } from '@/lib/actions/national-symbols';
 import {
   StatusBadge,
@@ -15,6 +15,7 @@ import {
   FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -60,10 +61,12 @@ export default function SymbolDetailClient({
   symbol,
   species,
   figures,
+  media,
 }: {
   symbol: NationalSymbol;
   species: RefOption[];
   figures: RefOption[];
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...symbol });
   const [dirty, setDirty] = useState(false);
@@ -239,6 +242,18 @@ export default function SymbolDetailClient({
           </Card>
         </div>
       </div>
+
+      <Card className="border-[#c2c8c2] bg-white">
+        <CardContent className="p-5 space-y-4">
+          <S title="Media" />
+          <EntityMediaPanel
+            entityType="national_symbol"
+            entityId={symbol.id}
+            items={media}
+            revalidatePaths={[`/national-symbols/${symbol.id}`, '/media']}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

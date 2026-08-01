@@ -3,6 +3,7 @@ import {
   getNationalSymbolById,
   getSpeciesOptions,
   getHistoricalFigureOptions,
+  getMediaForEntity,
 } from '@/lib/db';
 import SymbolDetailClient from './SymbolDetailClient';
 
@@ -12,9 +13,10 @@ export default async function SymbolDetailPage({ params }: { params: Promise<{ i
   if (isNaN(id)) notFound();
   const symbol = await getNationalSymbolById(id);
   if (!symbol) notFound();
-  const [species, figures] = await Promise.all([
+  const [species, figures, media] = await Promise.all([
     getSpeciesOptions(),
     getHistoricalFigureOptions(),
+    getMediaForEntity('national_symbol', id),
   ]);
-  return <SymbolDetailClient symbol={symbol} species={species} figures={figures} />;
+  return <SymbolDetailClient symbol={symbol} species={species} figures={figures} media={media} />;
 }

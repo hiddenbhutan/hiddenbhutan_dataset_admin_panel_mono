@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { HistoricalFigure, RefOption } from '@/lib/db';
+import type { HistoricalFigure, RefOption, MediaItem } from '@/lib/db';
 import {
   updateHistoricalFigure, setHistoricalFigureStatus, deleteHistoricalFigure,
 } from '@/lib/actions/historical-figures';
@@ -13,8 +13,9 @@ import {
   StatusBadge, StatusActions, DiscardSaveButtons, DeleteButton, FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -40,8 +41,8 @@ function S({ title }: { title: string }) {
 }
 
 export default function FigureDetailClient({
-  figure, periods,
-}: { figure: HistoricalFigure; periods: RefOption[] }) {
+  figure, periods, media,
+}: { figure: HistoricalFigure; periods: RefOption[]; media: MediaItem[] }) {
   const [data, setData] = useState({ ...figure });
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<ContentStatus>(figure.content_status);
@@ -256,6 +257,20 @@ export default function FigureDetailClient({
           </Card>
         </div>
       </div>
+
+      <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EntityMediaPanel
+            entityType="historical_figure"
+            entityId={figure.id}
+            items={media}
+            revalidatePaths={[`/historical-figures/${figure.id}`, '/media']}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

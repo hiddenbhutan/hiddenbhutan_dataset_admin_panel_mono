@@ -11,8 +11,10 @@ import type {
   RefOption,
   HeritageFee,
   HeritageOpeningHours,
+  MediaItem,
 } from '@/lib/db';
 import { updateDzong, setDzongStatus, deleteDzong } from '@/lib/actions/dzongs';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import PointGeomEditor from '@/components/map/PointGeomEditor';
 import type { GeomGeoJSON } from '@/components/map/MapView';
 import {
@@ -96,12 +98,14 @@ export default function DzongDetailClient({
   periods,
   figures,
   initialGeom,
+  media,
 }: {
   dzong: Dzong;
   lhakhangs: DzongLhakhang[];
   periods: RefOption[];
   figures: RefOption[];
   initialGeom: GeomGeoJSON | null;
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...dzong });
   const [dirty, setDirty] = useState(false);
@@ -391,6 +395,20 @@ export default function DzongDetailClient({
                   </tbody>
                 </table>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none mt-4">
+            <CardHeader className="pb-3">
+              <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EntityMediaPanel
+                entityType="dzong"
+                entityId={dzong.id}
+                items={media}
+                revalidatePaths={[`/dzongs/${dzong.id}`, '/media']}
+              />
             </CardContent>
           </Card>
         </div>

@@ -4,6 +4,7 @@ import {
   getRefWaypointTypes,
   getDzongkhagOptions,
   getGeomById,
+  getMediaForEntity,
 } from '@/lib/db';
 import WaypointDetailClient from './WaypointDetailClient';
 
@@ -13,10 +14,11 @@ export default async function WaypointDetailPage({ params }: { params: Promise<{
   if (isNaN(id)) notFound();
   const wp = await getWaypointById(id);
   if (!wp) notFound();
-  const [types, districts, geom] = await Promise.all([
+  const [types, districts, geom, media] = await Promise.all([
     getRefWaypointTypes(),
     getDzongkhagOptions(),
     getGeomById('waypoint', id),
+    getMediaForEntity('waypoint', id),
   ]);
-  return <WaypointDetailClient waypoint={wp} types={types} districts={districts} initialGeom={geom} />;
+  return <WaypointDetailClient waypoint={wp} types={types} districts={districts} initialGeom={geom} media={media} />;
 }

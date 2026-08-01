@@ -17,6 +17,7 @@ import type {
   FestivalTypeOption,
   FestivalVenue,
   FestivalVisitorTip,
+  MediaItem,
 } from '@/lib/db';
 import { updateFestival, setFestivalStatus, deleteFestival } from '@/lib/actions/festivals';
 import {
@@ -27,6 +28,7 @@ import {
   FieldError,
   type ContentStatus,
 } from '@/components/ContentStatusControls';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -95,6 +97,7 @@ export default function FestivalDetailClient({
   figures,
   thangkaDisplays,
   types,
+  media,
 }: {
   festival: Festival;
   occurrences: FestivalOccurrence[];
@@ -104,6 +107,7 @@ export default function FestivalDetailClient({
   figures: FestivalFigureRow[];
   thangkaDisplays: FestivalThangkaDisplay[];
   types: FestivalTypeOption[];
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...festival });
   const [dirty, setDirty] = useState(false);
@@ -597,6 +601,17 @@ export default function FestivalDetailClient({
           </Card>
         </div>
       </div>
+
+      {/* Media */}
+      <Card className="border border-outline-variant bg-surface-container-low rounded-xl shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle style={{ fontSize: '16px', color: '#1d1c15' }}>Media</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EntityMediaPanel entityType="festival" entityId={festival.id} items={media}
+            revalidatePaths={[`/festivals/${festival.id}`, '/media']} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
