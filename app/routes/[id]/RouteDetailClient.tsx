@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, useTransition } from 'react';
-import type { TrekRoute, Waypoint, NearbyWaypoint } from '@/lib/db';
+import type { TrekRoute, Waypoint, NearbyWaypoint, MediaItem } from '@/lib/db';
+import EntityMediaPanel from '@/components/media/EntityMediaPanel';
 import {
   updateTrekRoute,
   setTrekRouteStatus,
@@ -147,12 +148,14 @@ export default function RouteDetailClient({
   nearby,
   contentStatus: initialStatus,
   initialGeom,
+  media,
 }: {
   route: TrekRoute;
   waypoints: Waypoint[];
   nearby: NearbyWaypoint[];
   contentStatus: ContentStatus;
   initialGeom: GeomGeoJSON | null;
+  media: MediaItem[];
 }) {
   const [data, setData] = useState({ ...route });
   const [dirty, setDirty] = useState(false);
@@ -757,7 +760,12 @@ export default function RouteDetailClient({
           </TabsContent>
 
           <TabsContent value="media" className="p-5 m-0">
-            <div className="text-center py-8 text-outline" style={{ fontSize: '14px' }}>No media uploaded for this route yet.</div>
+            <EntityMediaPanel
+              entityType="trek_route"
+              entityId={route.id}
+              items={media}
+              revalidatePaths={[`/routes/${route.id}`, '/media']}
+            />
           </TabsContent>
 
           <TabsContent value="reviews" className="p-5 m-0">

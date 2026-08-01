@@ -2012,6 +2012,43 @@ export async function getMediaStatusCounts(): Promise<MediaStatusCounts> {
   };
 }
 
+/** All media for one specific entity, gallery-ordered (hero first, then sort_order). */
+export async function getMediaForEntity(entityType: MediaEntityType, entityId: number): Promise<MediaItem[]> {
+  const r = await q(`
+    SELECT
+      m.id,
+      m.entity_type::text   AS entity_type,
+      m.entity_id,
+      ${MEDIA_ENTITY_NAME_EXPR} AS entity_name,
+      m.kind::text          AS kind,
+      m.storage_key,
+      m.cdn_url,
+      m.mime_type,
+      m.byte_size,
+      m.width_px,
+      m.height_px,
+      m.duration_s,
+      m.alt_text,
+      m.caption,
+      m.sort_order,
+      (m.is_primary)::int   AS is_primary,
+      m.photographer,
+      m.license::text       AS license,
+      m.license_notes,
+      m.taken_at,
+      m.content_status::text AS content_status,
+      m.updated_at
+    FROM content.media m
+    WHERE m.entity_type = $1::content.entity_type AND m.entity_id = $2
+    ORDER BY m.is_primary DESC, m.sort_order ASC, m.id ASC
+  `, [entityType, entityId]);
+  return r.rows.map(row => ({
+    ...row,
+    taken_at:   iso(row.taken_at),
+    updated_at: iso(row.updated_at),
+  })) as MediaItem[];
+}
+
 export async function getMediaEntityTypeCounts(): Promise<Array<{ entity_type: MediaEntityType; count: number }>> {
   const r = await q(`
     SELECT entity_type::text AS entity_type, COUNT(*)::int AS count
